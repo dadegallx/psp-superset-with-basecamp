@@ -134,3 +134,5 @@ CLAUDE.local.md
 .claude_rc*
 .env.local
 PROJECT.md
+docker-compose.override.yml
+docker/pythonpath_dev/superset_config_docker.py
