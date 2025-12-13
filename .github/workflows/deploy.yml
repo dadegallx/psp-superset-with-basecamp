@@ -35,6 +35,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_push
     steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+
+      - name: Copy config files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.HOST_SSH_KEY }}
+          source: "docker-compose.prod.yml,Caddyfile"
+          target: "/opt/superset"
+
       - name: Deploy to DigitalOcean Droplet
         uses: appleboy/ssh-action@master
         with:
