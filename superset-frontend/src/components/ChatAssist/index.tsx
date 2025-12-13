@@ -90,7 +90,10 @@ export default function ChatAssist({ user }: ChatAssistProps) {
   return (
     <>
       <ChatContainer isOpen={isOpen}>
-        <Iframe src="about:blank" title="Superset AI Assistant" />
+        <Iframe
+          src={`http://localhost:3001/widget${user ? `?userId=${user.userId}&username=${encodeURIComponent(user.firstName + ' ' + user.lastName)}` : ''}`}
+          title="Superset AI Assistant"
+        />
       </ChatContainer>
       <ChatButton onClick={toggleChat} aria-label="Toggle Chat Assistant">
         {isOpen ? (

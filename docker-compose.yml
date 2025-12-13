@@ -161,6 +161,23 @@ services:
     healthcheck:
       disable: true
 
+  basecamp-ai:
+    build: ./superset-basecamp-ai
+    container_name: basecamp_ai
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - POSTGRES_URL=postgresql://superset:superset@db:5432/basecamp
+      - NEON_DATABASE_URL=postgresql://superset:superset@db:5432/basecamp
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SECRET=dev_secret_key_change_me
+      - AUTH_TRUST_HOST=true
+      - AUTH_URL=http://localhost:3001
+    depends_on:
+      - db
+      - redis
+
   superset-node:
     build:
       context: .
