@@ -1,0 +1,65 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: registry.digitalocean.com/psp-superset-registry
+  IMAGE_NAME: superset
+  DROPLET_IP: ${{ secrets.HOST_IP }}
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: action/checkout@v2
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry with Docker
+        run: doctl registry login --expiry-seconds 600
+
+      - name: Build container image
+        run: docker build -f Dockerfile --target lean -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
+
+      - name: Push image to DigitalOcean Container Registry
+        run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    steps:
+      - name: Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.HOST_SSH_KEY }}
+          script: |
+            # Login to registry on the server (if not already logged in/refresh token)
+            # You might need to pass the token or use a config file. 
+            # For simplicity, we assume the server has `doctl` auth or we pass the token.
+            # Actually better: Login using the standard docker login via token
+            echo ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} | docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} --password-stdin registry.digitalocean.com
+            
+            cd /opt/superset
+            
+            # Update the image tag in .env or just explicitly pull the specific tag
+            # We'll use the SHA tag we just built
+            export TAG=$(echo $GITHUB_SHA | head -c7)
+            export REGISTRY=registry.digitalocean.com/psp-superset-registry
+            export IMAGE_NAME=superset
+            
+            # Pull the new image
+            docker pull $REGISTRY/$IMAGE_NAME:$TAG
+            
+            # Update the containers
+            # We need to make sure docker-compose knows about the new tag. 
+            # Strategy: Pass it as an env var to the compose command
+            TAG=$TAG docker compose -f docker-compose.prod.yml up -d

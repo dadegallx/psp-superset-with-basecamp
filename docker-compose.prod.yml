@@ -1,0 +1,69 @@
+# Docker Compose for Production (DigitalOcean)
+# - No local database (Connects to Managed DB via env vars)
+# - No local redis (Connects to Managed Redis via env vars)
+# - "lean" image (Size optimized, no dev tools)
+# - No local volume mounts (Code is immutable inside image)
+
+services:
+  # 1. Main Web Server
+  superset:
+    image: registry.digitalocean.com/psp-superset-registry/superset:${TAG:-latest}
+    restart: always
+    env_file: .env   # <--- Loads RDS/Managed DB creds
+    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+    depends_on:
+      - redis
+
+  # 2. Initialization Job (Runs migrations on startup)
+  superset-init:
+    image: registry.digitalocean.com/psp-superset-registry/superset:${TAG:-latest}
+    env_file: .env
+    command: ["/app/docker/docker-init.sh"]
+    depends_on:
+      - redis
+
+  # 3. Background Worker (For async queries/reports)
+  superset-worker:
+    image: registry.digitalocean.com/psp-superset-registry/superset:${TAG:-latest}
+    restart: always
+    env_file: .env
+    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    depends_on:
+      - redis
+
+  # 4. Scheduler (Needed for Alerts/Reports)
+  superset-worker-beat:
+    image: registry.digitalocean.com/psp-superset-registry/superset:${TAG:-latest}
+    restart: always
+    env_file: .env
+    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    depends_on:
+      - redis
+
+  # 5. Redis (Local Cache)
+  redis:
+    image: redis:7
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  # 6. Caddy (Reverse Proxy & SSL)
+  caddy:
+    image: caddy:2
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file: .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - superset
+
+volumes:
+  redis_data:
+  caddy_data:
+  caddy_config:
+

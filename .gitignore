@@ -136,3 +136,8 @@ CLAUDE.local.md
 PROJECT.md
 docker-compose.override.yml
 docker/pythonpath_dev/superset_config_docker.py
+
+# Production Secrets
+.env.prod
+secret_key.txt
+superset_backup.sql

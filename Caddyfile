@@ -1,0 +1,7 @@
+{
+    email {$TLS_EMAIL}
+}
+
+{$DOMAIN_NAME} {
+    reverse_proxy superset:8088
+}

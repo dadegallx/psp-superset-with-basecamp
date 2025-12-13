@@ -221,6 +221,13 @@ FROM python-common AS lean
 COPY requirements/base.txt requirements/
 RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
     /app/docker/pip-install.sh --requires-build-essential -r requirements/base.txt
+
+COPY requirements/local.txt requirements/
+RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
+    /app/docker/pip-install.sh --requires-build-essential -r requirements/local.txt
+
+# Copy config for production
+COPY docker/pythonpath_dev/superset_config.py /app/pythonpath/superset_config.py
 # Install the superset package
 RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
     uv pip install -e .
