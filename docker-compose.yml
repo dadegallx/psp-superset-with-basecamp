@@ -167,15 +167,14 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3000"
+    env_file:
+      - path: ./superset-basecamp-ai/.env.local  # API secrets (AI keys, blob token)
+        required: false  # Won't break on fresh clone
     environment:
-      - POSTGRES_URL=postgresql://superset:superset@db:5432/basecamp
-      - NEON_DATABASE_URL=postgresql://superset:superset@db:5432/basecamp
-      - REDIS_URL=redis://redis:6379
-      - AUTH_SECRET=dev_secret_key_change_me
+      # Local overrides (DB URLs come from .env.local → Neon cloud)
       - AUTH_TRUST_HOST=true
       - AUTH_URL=http://localhost:3001
     depends_on:
-      - db
       - redis
 
   superset-node:
