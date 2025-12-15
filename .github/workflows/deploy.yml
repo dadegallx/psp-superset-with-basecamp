@@ -25,6 +25,19 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with Docker
         run: doctl registry login --expiry-seconds 600
 
+      - name: Clean up old images from registry
+        run: |
+          # Delete all existing manifests to free up space (Starter tier has 500MB limit)
+          OLD_MANIFESTS=$(doctl registry repository list-manifests superset --format Digest --no-header 2>/dev/null || echo "")
+          for digest in $OLD_MANIFESTS; do
+            echo "Deleting old manifest: $digest"
+            doctl registry repository delete-manifest superset $digest --force || true
+          done
+          # Start garbage collection to reclaim space (runs async, but frees up quota immediately)
+          doctl registry garbage-collection start --include-untagged-manifests --force || true
+          # Brief wait for quota to update
+          sleep 5
+
       - name: Build container image
         run: docker build -f Dockerfile --target lean -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
 
