@@ -14,8 +14,10 @@ jobs:
   build_and_push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master
+      - name: Checkout with submodules
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -27,22 +29,28 @@ jobs:
 
       - name: Clean up old images from registry
         run: |
-          # Delete all existing manifests to free up space (Starter tier has 500MB limit)
-          OLD_MANIFESTS=$(doctl registry repository list-manifests superset --format Digest --no-header 2>/dev/null || echo "")
-          for digest in $OLD_MANIFESTS; do
-            echo "Deleting old manifest: $digest"
-            doctl registry repository delete-manifest superset $digest --force || true
+          # Delete old manifests for both repositories to free up space
+          for repo in superset basecamp-ai; do
+            OLD_MANIFESTS=$(doctl registry repository list-manifests $repo --format Digest --no-header 2>/dev/null || echo "")
+            for digest in $OLD_MANIFESTS; do
+              echo "Deleting old manifest from $repo: $digest"
+              doctl registry repository delete-manifest $repo $digest --force || true
+            done
           done
-          # Start garbage collection to reclaim space (runs async, but frees up quota immediately)
+          # Start garbage collection to reclaim space
           doctl registry garbage-collection start --include-untagged-manifests --force || true
-          # Brief wait for quota to update
           sleep 5
 
-      - name: Build container image
-        run: docker build -f Dockerfile --target lean -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
+      - name: Build Superset image
+        run: docker build -f Dockerfile --target lean -t $REGISTRY/superset:$(echo $GITHUB_SHA | head -c7) .
 
-      - name: Push image to DigitalOcean Container Registry
-        run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+      - name: Build Basecamp AI image
+        run: docker build -t $REGISTRY/basecamp-ai:$(echo $GITHUB_SHA | head -c7) ./superset-basecamp-ai
+
+      - name: Push images to DigitalOcean Container Registry
+        run: |
+          docker push $REGISTRY/superset:$(echo $GITHUB_SHA | head -c7)
+          docker push $REGISTRY/basecamp-ai:$(echo $GITHUB_SHA | head -c7)
 
   deploy:
     runs-on: ubuntu-latest
@@ -76,12 +84,12 @@ jobs:
             # Set image tag from GitHub SHA (passed via envs parameter)
             export TAG=$(echo $GITHUB_SHA | head -c7)
             export REGISTRY=registry.digitalocean.com/psp-superset-registry
-            export IMAGE_NAME=superset
 
-            echo "Deploying image: $REGISTRY/$IMAGE_NAME:$TAG"
+            echo "Deploying with tag: $TAG"
 
-            # Pull the new image
-            docker pull $REGISTRY/$IMAGE_NAME:$TAG
+            # Pull both images
+            docker pull $REGISTRY/superset:$TAG
+            docker pull $REGISTRY/basecamp-ai:$TAG
 
             # Update the containers with the new tag
             TAG=$TAG docker compose -f docker-compose.prod.yml up -d
