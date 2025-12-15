@@ -108,6 +108,64 @@ WEBDRIVER_BASEURL_USER_FRIENDLY = (
 )
 SQLLAB_CTAS_NO_LIMIT = True
 
+# Allow embedding the chatbot widget from localhost:3001
+TALISMAN_CONFIG = {
+    "content_security_policy": {
+        "base-uri": ["'self'"],
+        "default-src": ["'self'"],
+        "img-src": [
+            "'self'",
+            "blob:",
+            "data:",
+            "https://apachesuperset.gateway.scarf.sh",
+            "https://static.scarf.sh/",
+        ],
+        "worker-src": ["'self'", "blob:"],
+        "connect-src": [
+            "'self'",
+            "https://api.mapbox.com",
+            "https://events.mapbox.com",
+        ],
+        "object-src": "'none'",
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "script-src": ["'self'", "'strict-dynamic'"],
+        "frame-src": ["'self'", "http://localhost:3001"],
+    },
+    "content_security_policy_nonce_in": ["script-src"],
+    "force_https": False,
+    "session_cookie_secure": False,
+}
+
+# DEV MODE: Also need to set TALISMAN_DEV_CONFIG since FLASK_DEBUG=true
+# causes Superset to use this config instead of TALISMAN_CONFIG
+TALISMAN_DEV_CONFIG = {
+    "content_security_policy": {
+        "base-uri": ["'self'"],
+        "default-src": ["'self'"],
+        "img-src": [
+            "'self'",
+            "blob:",
+            "data:",
+            "https://apachesuperset.gateway.scarf.sh",
+            "https://static.scarf.sh/",
+            "https://cdn.brandfolder.io",
+        ],
+        "worker-src": ["'self'", "blob:"],
+        "connect-src": [
+            "'self'",
+            "https://api.mapbox.com",
+            "https://events.mapbox.com",
+        ],
+        "object-src": "'none'",
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        "frame-src": ["'self'", "http://localhost:3001"],
+    },
+    "content_security_policy_nonce_in": ["script-src"],
+    "force_https": False,
+    "session_cookie_secure": False,
+}
+
 log_level_text = os.getenv("SUPERSET_LOG_LEVEL", "INFO")
 LOG_LEVEL = getattr(logging, log_level_text.upper(), logging.INFO)
 
