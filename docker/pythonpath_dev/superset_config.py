@@ -111,6 +111,25 @@ SQLLAB_CTAS_NO_LIMIT = True
 log_level_text = os.getenv("SUPERSET_LOG_LEVEL", "INFO")
 LOG_LEVEL = getattr(logging, log_level_text.upper(), logging.INFO)
 
+# Custom Poverty Stoplight color scheme
+# Colors are assigned in order: Green, Yellow, Red, Skipped, Unknown
+# Ensure your data returns labels in this order for correct color mapping
+EXTRA_CATEGORICAL_COLOR_SCHEMES = [
+    {
+        "id": "povertyStoplight",
+        "description": "Poverty Stoplight traffic light colors",
+        "label": "Poverty Stoplight",
+        "isDefault": True,
+        "colors": [
+            "#2E7D32",  # Green
+            "#F9A825",  # Yellow
+            "#C62828",  # Red
+            "#9E9E9E",  # Skipped
+            "#616161",  # Unknown (darker grey)
+        ],
+    }
+]
+
 if os.getenv("CYPRESS_CONFIG") == "true":
     # When running the service as a cypress backend, we need to import the config
     # located @ tests/integration_tests/superset_test_config.py
