@@ -91,7 +91,7 @@ export default function ChatAssist({ user }: ChatAssistProps) {
     <>
       <ChatContainer isOpen={isOpen}>
         <Iframe
-          src={`http://${window.location.hostname}:3001/widget${user ? `?userId=${user.userId}&username=${encodeURIComponent(user.firstName + ' ' + user.lastName)}` : ''}`}
+          src={`/chat/widget${user ? `?userId=${user.userId}&username=${encodeURIComponent(user.firstName + ' ' + user.lastName)}` : ''}`}
           title="Superset AI Assistant"
         />
       </ChatContainer>

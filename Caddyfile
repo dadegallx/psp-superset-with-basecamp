@@ -3,5 +3,11 @@
 }
 
 {$DOMAIN_NAME} {
-    reverse_proxy superset:8088
+    handle /chat/* {
+        uri strip_prefix /chat
+        reverse_proxy basecamp-ai:3000
+    }
+    handle {
+        reverse_proxy superset:8088
+    }
 }

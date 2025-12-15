@@ -51,8 +51,6 @@ services:
   basecamp-ai:
     image: registry.digitalocean.com/psp-superset-registry/basecamp-ai:${TAG:-latest}
     restart: always
-    ports:
-      - "3001:3000"
     env_file: .env
     environment:
       - AUTH_TRUST_HOST=true
