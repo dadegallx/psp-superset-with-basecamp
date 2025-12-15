@@ -66,25 +66,22 @@ jobs:
           host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.HOST_SSH_KEY }}
+          envs: GITHUB_SHA
           script: |
-            # Login to registry on the server (if not already logged in/refresh token)
-            # You might need to pass the token or use a config file. 
-            # For simplicity, we assume the server has `doctl` auth or we pass the token.
-            # Actually better: Login using the standard docker login via token
+            # Login to registry
             echo ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} | docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} --password-stdin registry.digitalocean.com
-            
+
             cd /opt/superset
-            
-            # Update the image tag in .env or just explicitly pull the specific tag
-            # We'll use the SHA tag we just built
+
+            # Set image tag from GitHub SHA (passed via envs parameter)
             export TAG=$(echo $GITHUB_SHA | head -c7)
             export REGISTRY=registry.digitalocean.com/psp-superset-registry
             export IMAGE_NAME=superset
-            
+
+            echo "Deploying image: $REGISTRY/$IMAGE_NAME:$TAG"
+
             # Pull the new image
             docker pull $REGISTRY/$IMAGE_NAME:$TAG
-            
-            # Update the containers
-            # We need to make sure docker-compose knows about the new tag. 
-            # Strategy: Pass it as an env var to the compose command
+
+            # Update the containers with the new tag
             TAG=$TAG docker compose -f docker-compose.prod.yml up -d
