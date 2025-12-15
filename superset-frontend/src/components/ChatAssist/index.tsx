@@ -78,8 +78,8 @@ export default function ChatAssist({ user }: ChatAssistProps) {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useTheme();
 
-  // Only show for logged-in users
-  if (!user) {
+  // Only show for authenticated users (must have userId)
+  if (!user?.userId) {
     return null;
   }
 
