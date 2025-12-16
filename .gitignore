@@ -141,3 +141,6 @@ docker/pythonpath_dev/superset_config_docker.py
 .env.prod
 secret_key.txt
 superset_backup.sql
+
+# Playwright
+.playwright-mcp

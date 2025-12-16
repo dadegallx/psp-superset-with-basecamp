@@ -4,7 +4,6 @@
 
 {$DOMAIN_NAME} {
     handle /chat/* {
-        uri strip_prefix /chat
         reverse_proxy basecamp-ai:3000
     }
     handle {
