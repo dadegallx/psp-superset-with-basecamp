@@ -49,8 +49,17 @@ jobs:
 
       - name: Push images to DigitalOcean Container Registry
         run: |
-          docker push $REGISTRY/superset:$(echo $GITHUB_SHA | head -c7)
-          docker push $REGISTRY/basecamp-ai:$(echo $GITHUB_SHA | head -c7)
+          TAG=$(echo $GITHUB_SHA | head -c7)
+
+          # Push SHA-tagged images
+          docker push $REGISTRY/superset:$TAG
+          docker push $REGISTRY/basecamp-ai:$TAG
+
+          # Also tag and push as 'latest' for manual server operations
+          docker tag $REGISTRY/superset:$TAG $REGISTRY/superset:latest
+          docker tag $REGISTRY/basecamp-ai:$TAG $REGISTRY/basecamp-ai:latest
+          docker push $REGISTRY/superset:latest
+          docker push $REGISTRY/basecamp-ai:latest
 
   deploy:
     runs-on: ubuntu-latest
