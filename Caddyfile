@@ -2,11 +2,10 @@
     email {$TLS_EMAIL}
 }
 
+chat.{$DOMAIN_NAME} {
+    reverse_proxy basecamp-ai:3000
+}
+
 {$DOMAIN_NAME} {
-    handle /chat/* {
-        reverse_proxy basecamp-ai:3000
-    }
-    handle {
-        reverse_proxy superset:8088
-    }
+    reverse_proxy superset:8088
 }

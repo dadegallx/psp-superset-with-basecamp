@@ -74,6 +74,21 @@ const Iframe = styled.iframe`
   border: none;
 `;
 
+// Get chat widget URL based on environment
+const getChatUrl = (): string => {
+  if (typeof window === 'undefined') return '';
+
+  const { hostname, protocol } = window.location;
+
+  // Local development - direct port access
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3001';
+  }
+
+  // Production - use chat subdomain
+  return `${protocol}//chat.${hostname}`;
+};
+
 export default function ChatAssist({ user }: ChatAssistProps) {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useTheme();
@@ -87,11 +102,14 @@ export default function ChatAssist({ user }: ChatAssistProps) {
     setIsOpen(!isOpen);
   };
 
+  const chatUrl = getChatUrl();
+  const widgetSrc = `${chatUrl}/widget${user ? `?userId=${user.userId}&username=${encodeURIComponent(user.firstName + ' ' + user.lastName)}` : ''}`;
+
   return (
     <>
       <ChatContainer isOpen={isOpen}>
         <Iframe
-          src={`/chat/widget${user ? `?userId=${user.userId}&username=${encodeURIComponent(user.firstName + ' ' + user.lastName)}` : ''}`}
+          src={widgetSrc}
           title="Superset AI Assistant"
         />
       </ChatContainer>
