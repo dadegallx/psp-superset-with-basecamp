@@ -47,14 +47,6 @@ services:
     volumes:
       - redis_data:/data
 
-  # 6. Basecamp AI Chatbot
-  basecamp-ai:
-    image: registry.digitalocean.com/psp-superset-registry/basecamp-ai:${TAG:-latest}
-    restart: always
-    env_file: .env
-    environment:
-      - AUTH_TRUST_HOST=true
-      - NODE_ENV=production
 
   # 7. Caddy (Reverse Proxy & SSL)
   caddy:
